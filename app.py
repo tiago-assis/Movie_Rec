@@ -1,5 +1,4 @@
 import streamlit as st
-from streamlit_js_eval import streamlit_js_eval
 import pandas as pd
 import numpy as np
 from scipy.sparse import load_npz
