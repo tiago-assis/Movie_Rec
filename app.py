@@ -10,27 +10,6 @@ st.set_page_config(layout="wide", page_icon="🎞",
 
 stss = st.session_state
 
-st.markdown("""
-            <style>
-            header[data-testid="stHeader"] {
-                display: none;
-            }
-            div[data-testid="stSidebarHeader"] {
-                padding-bottom: 0px;
-            }
-            div[data-testid="stSidebarUserContent"] {
-                align-items: top;
-                padding-bottom: 48px;
-                padding-top: 8px;
-            }
-            section[data-testid="stSidebar] {
-                width: 450px;
-                height: 100%;
-            }
-            </style>
-            """,
-            unsafe_allow_html=True)
-
 df = pd.read_csv("cleaned_data/movies_metadata_small_cleaned.csv")
 
 if "columns_loaded" not in stss:
@@ -188,6 +167,35 @@ if "filtered_df" not in stss:
 
 
 with st.sidebar:
+
+    st.markdown("""
+            <style>
+            h1 {
+                padding-top: 10px;
+            }
+            [data-testid="stSidebar"][aria-expanded="true"] {
+                min-width: 25rem;
+                max-width: 25rem;
+            }
+            header[data-testid="stHeader"] {
+                display: none;
+            }
+            div[data-testid="stSidebarHeader"] {
+                padding-bottom: 0;
+            }
+            div[data-testid="stSidebarUserContent"] {
+                align-items: top;
+                padding-bottom: 48px;
+                padding-top: 8px;
+            }
+            section[data-testid="stSidebar] {
+                width: 450px;
+                height: 100%;
+            }
+            </style>
+            """,
+                unsafe_allow_html=True)
+
     st.write("# Search By Title")
 
     st.selectbox(label="Title Search",
@@ -271,6 +279,7 @@ with st.sidebar:
 
 
 stss.filtered_df  # TESTING ---------------------
+
 
 st.write("## Top 20 Movies")
 # st.selectbox(label="Sort by:")
