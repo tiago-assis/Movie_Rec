@@ -76,9 +76,8 @@ def main(row):
 with ThreadPoolExecutor(max_workers=multiprocessing.cpu_count() * 5) as executor:
     futures = [executor.submit(main, row) for _, row in df.iterrows()]
 
-    for future in tqdm(as_completed(futures), total=len(futures)):
-        # future.result()
-        pass
+    for future in tqdm(as_completed(futures), total=len(futures), mininterval=3):
+        future.result()
 
 # df.apply(get_posters, axis=1)
 
