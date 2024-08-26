@@ -373,3 +373,6 @@ for i, row_columns in enumerate(poster_columns):
         except:
             col.image("assets/posters/null_w500.jpg",
                       caption=f"{titles[i * MAX_COLUMNS + j]}")
+
+
+# TODO: reset button can be spammed and errors occur due to missing session_state keys
