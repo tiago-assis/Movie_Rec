@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from tqdm import tqdm
 import json
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import multiprocessing
 
 HEADERS = {
     "accept": "application/json",
@@ -46,8 +47,8 @@ def fetch_and_save_poster(movie_id, poster_url, save_path):
         saved_poster_urls[movie_id] = poster_url
     else:
         failed_poster_urls[movie_id] = poster_url
-        print(f"""\nFailed to get response from [{poster_url}]. Status Code {
-              poster_response.status_code}\n""")
+        # print(f"""\nFailed to get response from [{poster_url}]. Status Code {
+        #      poster_response.status_code}\n""")
 
 
 def main(row):
@@ -71,11 +72,11 @@ def main(row):
                 return
             elif all_languages:
                 failed_access_urls[movie_id] = images_url
-                print(f"""\nFailed to get response from [{images_url}]. Status Code {
-                    images_response.status_code}""")
+                # print(f"""\nFailed to get response from [{images_url}]. Status Code {
+                #    images_response.status_code}""")
 
 
-with ThreadPoolExecutor(max_workers=6) as executor:
+with ThreadPoolExecutor(max_workers=1000) as executor:
     futures = [executor.submit(main, row) for _, row in df.iterrows()]
 
     for future in tqdm(as_completed(futures), total=len(futures), mininterval=5):
