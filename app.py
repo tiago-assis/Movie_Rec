@@ -4,6 +4,8 @@ import numpy as np
 from scipy.sparse import load_npz
 import pickle
 import os
+import math
+import time
 
 st.set_page_config(layout="wide", page_icon="🎞",
                    page_title="Movie Recommendation")
@@ -190,9 +192,8 @@ if "filters" not in st.session_state:
 if "displayed_df" not in st.session_state:
     st.session_state.displayed_df = df.copy()
 
-
-with st.sidebar:
-
+sidebar = st.sidebar
+with sidebar:
     st.markdown("""
             <style>
             h1 {
@@ -287,14 +288,12 @@ with st.sidebar:
     st.write("### Production Companies")
     st.multiselect(label="Production Companies",
                    label_visibility="collapsed",
-                   options=dict(sorted(st.session_state.movie_label_counter['production_companies'].items(),
-                                       key=lambda counter: counter[1],
-                                       reverse=True)),
-                   format_func=lambda production_companies: f"{production_companies} ({
-                       st.session_state.movie_label_counter['production_companies'][production_companies]})",
+                   options=dict(sorted(st.session_state.movie_label_counter['production_companies'].items(
+                   ), key=lambda counter: counter[1], reverse=True)),
+                   format_func=lambda production_company: f"""{production_company} ({
+                       st.session_state.movie_label_counter['production_companies'][production_company]})""",
                    default=st.session_state.production_company_selection if "production_company_selection" in st.session_state else None,
-                   on_change=filter_by_production_company,
-                   key="production_company_selection",
+                   on_change=filter_by_production_company, key="production_company_selection",
                    disabled=st.session_state.disable_filters)
 
     def reset_filters():
@@ -310,8 +309,6 @@ with st.sidebar:
               disabled=st.session_state.disable_filters)
 
 
-# TESTING --------------------- #
-
 def sort_df():
     sorting_methods = {"Popularity": "popularity",
                        "Rating": "vote_weighted_average",
@@ -326,18 +323,22 @@ def sort_df():
 
 sort_selection, sort_order, _ = st.columns([0.15, 0.15, 1])
 with sort_selection:
+    sorting_selection_options = [
+        "Popularity", "Rating", "Title", "Release Year"]
     st.selectbox(label="Sorting method",
                  label_visibility="collapsed",
-                 options=["Popularity", "Rating",
-                          "Title", "Release Year"],
-                 index=0,
+                 options=sorting_selection_options,
+                 index=sorting_selection_options.index(
+                     st.session_state.sorting_method) if "sorting_method" in st.session_state else 0,
                  on_change=sort_df,
                  key="sorting_method")
 with sort_order:
+    sorting_order_options = ["Ascending", "Descending"]
     st.selectbox(label="Sorting order",
                  label_visibility="collapsed",
-                 options=["Ascending", "Descending"],
-                 index=1,
+                 options=sorting_order_options,
+                 index=sorting_order_options.index(
+                     st.session_state.sorting_order) if "sorting_order" in st.session_state else 1,
                  on_change=sort_df,
                  key="sorting_order")
 
@@ -346,39 +347,29 @@ st.session_state.displayed_df
 
 st.write(f"## Movies By {st.session_state.sorting_method}")
 
-# TODO: ADD ONLY THE NECESSARY COLUMNS BY LOOKING AT NUMBER OF ROWS IN DISPLAYED_DF
-first_movie_row = st.columns(5)
-second_movie_row = st.columns(5)
-third_movie_row = st.columns(5)
-fourth_movie_row = st.columns(5)
-posters = [f"{idx}_w185.jpg" for idx in list(
+#! DON'T KNOW IF THE FOLLOWING WORKS FOR ANY VALUE OF MAX_ROWS AND MAX_COLUMNS !#
+MAX_ROWS = 4
+MAX_COLUMNS = 5
+total_filtered_movies = len(st.session_state.displayed_df)
+row_calc = total_filtered_movies / MAX_COLUMNS
+number_of_rows = min(MAX_ROWS, math.ceil(row_calc))
+# when not all the columns of the last row are filled,
+# the number of columns is calculated by the decimal part of the row_calc value multiplied by the max number of columns
+number_of_columns_in_last_row = math.ceil(
+    total_filtered_movies % MAX_COLUMNS) or MAX_COLUMNS
+columns_per_row = [MAX_COLUMNS] * \
+    (number_of_rows - 1) + [number_of_columns_in_last_row]
+poster_columns = [st.columns(MAX_COLUMNS)] * number_of_rows
+
+posters = [f"{idx}_w500.jpg" for idx in list(
     st.session_state.displayed_df['tmdbId'])]
 titles = list(st.session_state.displayed_df['original_title'])
-for i, col in enumerate(first_movie_row):
-    try:
-        col.image("assets/posters/" + posters[i], caption=f"{titles[i]}")
-    except:
-        col.image("assets/posters/null_w185.jpg", caption=f"{titles[i]}")
-for i, col in enumerate(second_movie_row):
-    try:
-        col.image("assets/posters/" + posters[i+5], caption=f"{titles[i+5]}")
-    except:
-        col.image("assets/posters/null_w185.jpg", caption=f"{titles[i+5]}")
-for i, col in enumerate(third_movie_row):
-    try:
-        col.image("assets/posters/" + posters[i+10], caption=f"{titles[i+10]}")
-    except:
-        col.image("assets/posters/null_w185.jpg", caption=f"{titles[i+10]}")
-for i, col in enumerate(fourth_movie_row):
-    try:
-        col.image("assets/posters/" + posters[i+15], caption=f"{titles[i+15]}")
-    except:
-        col.image("assets/posters/null_w185.jpg", caption=f"{titles[i+15]}")
 
-
-# TODO: NUMBER OF MOVIES NOT CORRECT WHEN FILTERS ARE REMOVED (NOT SURE WHEN RESET) - HAPPENS AT movies_idxs
-# KINDA FIXED IT, NEED TO CHECK MORE DEEPLY - IT IS BECAUSE OF NULLS?? - CHECK DATA CLEANING
-
-# TODO: FIX POSTERS NOT FOUND - DUE TO SEARCHING ONLY FOR "EN" TAG
-#       ALSO OUT OF BOUNDS ERROR OFC - PROBABLY GONNA BE FIXED ABOVE WHEN ONLY DISPLAYING THE EXACT NUMBER OF COLUMNS/ROWS
-#       AND SOME POSTERS HAVE DIFFERENT SIZES FOR SOME REASON??
+for i, row_columns in enumerate(poster_columns):
+    for j, col in enumerate(row_columns[:columns_per_row[i]]):
+        try:
+            col.image("assets/posters/" +
+                      posters[i * MAX_COLUMNS + j], caption=f"{titles[i * MAX_COLUMNS + j]}")
+        except:
+            col.image("assets/posters/null_w500.jpg",
+                      caption=f"{titles[i * MAX_COLUMNS + j]}")
