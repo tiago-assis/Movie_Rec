@@ -25,8 +25,6 @@ failed_access_urls = {}
 failed_poster_urls = {}
 saved_poster_urls = {}
 
-t = tqdm(total=len(df), mininterval=5)
-
 
 def get_poster_url(movie_id, original_language, all_languages=False):
     base_url = f"https://api.themoviedb.org/3/movie/{movie_id}/images"
@@ -47,12 +45,11 @@ def fetch_and_save_poster(movie_id, poster_url, save_path):
         saved_poster_urls[movie_id] = poster_url
     else:
         failed_poster_urls[movie_id] = poster_url
-        # print(f"""\nFailed to get response from [{poster_url}]. Status Code {
-        #      poster_response.status_code}\n""")
+        print(f"""\nFailed to get response from [{poster_url}]. Status Code {
+            poster_response.status_code}""")
 
 
 def main(row):
-    t.update(1)
     movie_id = row['tmdbId']
     original_language = row['original_language']
     save_path = f"{SAVE_DIR}/{movie_id}_{POSTER_SIZE}.jpg"
@@ -72,15 +69,16 @@ def main(row):
                 return
             elif all_languages:
                 failed_access_urls[movie_id] = images_url
-                # print(f"""\nFailed to get response from [{images_url}]. Status Code {
-                #    images_response.status_code}""")
+                print(f"""\nFailed to get response from [{images_url}]. Status Code {
+                    images_response.status_code}""")
 
 
-with ThreadPoolExecutor(max_workers=1000) as executor:
+with ThreadPoolExecutor(max_workers=multiprocessing.cpu_count() * 5) as executor:
     futures = [executor.submit(main, row) for _, row in df.iterrows()]
 
-    for future in tqdm(as_completed(futures), total=len(futures), mininterval=5):
-        future.result()
+    for future in tqdm(as_completed(futures), total=len(futures)):
+        # future.result()
+        pass
 
 # df.apply(get_posters, axis=1)
 
