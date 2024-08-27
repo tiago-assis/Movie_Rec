@@ -1,21 +1,20 @@
 import requests
 import pandas as pd
 import os
-from dotenv import load_dotenv
 from tqdm import tqdm
 import json
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import multiprocessing
+import streamlit as st
 
 HEADERS = {
     "accept": "application/json",
-    "Authorization": os.getenv('TMDB_API_KEY')
+    "Authorization": st.secrets['tmdb_api']['key']
 }
 POSTER_SIZE = "w500"
 SAVE_DIR = "assets/posters"
 OVERWRITE_JSON = True
 
-load_dotenv()
 
 df = pd.read_csv(
     "cleaned_data/movies_metadata_small_cleaned.csv", usecols=['tmdbId', 'original_language'])

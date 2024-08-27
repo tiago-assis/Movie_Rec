@@ -3,11 +3,13 @@ from st_click_detector import click_detector
 import pandas as pd
 import numpy as np
 from scipy.sparse import load_npz
+from get_similarity_matrix import get_matrix_data
 import pickle
 import os
 import math
 import time
 import ast
+
 
 st.set_page_config(layout="wide", page_icon="🎞",
                    page_title="Movie Recommendation")
@@ -26,7 +28,7 @@ def get_data():
         production_companies_cols = pickle.load(f)
     with open("cleaned_data/recommendation_movie_mappings.pickle", "rb") as f:
         rec_movie_mappings = pickle.load(f)
-    movie_recs = load_npz("cleaned_data/movie_recommendations.npz")
+    movie_recs = get_matrix_data()
     return df, genres_cols, spoken_languages_cols, cast_cols, production_companies_cols, movie_recs, rec_movie_mappings
 
 
@@ -167,6 +169,7 @@ def filter_by_production_company():
     recount_movies()
 
 
+## TODO: TURN MOST OF THESE INTO CACHED DATA ##
 if "genres_matrix" not in st.session_state:
     st.session_state.genres_matrix = load_npz("cleaned_data/genres_matrix.npz")
 if "spoken_languages_matrix" not in st.session_state:
@@ -465,5 +468,6 @@ if clicked != "":
 
 # TODO: ABLE TO CLICK RECOMMENDED MOVIES
 # TODO: MORE ROBUST RECOMMENDATIONS
+# TODO: ADD RECOMMENDATION MATRIX TO GOOGLE DRIVE (?)
 # TODO: reset button can be spammed and errors occur due to missing session_state keys
 ####!!!! TODO: ACRESCENTAR O RESTO DAS MATRIZES AO CACHE !!!!####
