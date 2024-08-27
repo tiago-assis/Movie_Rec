@@ -166,3 +166,6 @@ raw_data/
 
 # Movie Poster Assets
 #assets/
+
+# Movie Sim Matrix
+cleaned_data/movie_recommendations.npz
