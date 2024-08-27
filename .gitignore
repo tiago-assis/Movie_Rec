@@ -169,3 +169,6 @@ raw_data/
 
 # Movie Sim Matrix
 cleaned_data/movie_recommendations.npz
+
+# Streamlit secrets file
+.streamlit/secrets.toml
