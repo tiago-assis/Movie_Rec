@@ -306,8 +306,13 @@ with sidebar:
 
     def reset_filters():
         st.session_state.displayed_df = df
-        for state in st.session_state:
-            st.session_state.pop(state)
+        st.session_state.pop('sorting_method')
+        st.session_state.pop('sorting_order')
+        st.session_state.pop('genre_selection')
+        st.session_state.pop('year_selection')
+        st.session_state.pop('spoken_language_selection')
+        st.session_state.pop('cast_selection')
+        st.session_state.pop('production_company_selection')
 
     st.write("")
     st.button(label="Reset Filters",
@@ -372,7 +377,8 @@ st.write(f"## Movies By {st.session_state.sorting_method}")
 titles = list(st.session_state.displayed_df['original_title'])
 
 html_posters = [f"""<td><a href='#' id='{idx}'><img width='93%' src='https://raw.githubusercontent.com/tiago-assis/Movie_Recommendation/main/assets/posters/{
-    idx}_w500.jpg'></a></td>""" for idx in list(st.session_state.displayed_df['tmdbId'])]
+    idx}_w500.jpg' onerror="this.src='https://raw.githubusercontent.com/tiago-assis/Movie_Recommendation/main/assets/posters/null_w500.jpg';"></a></td>"""
+    for idx in list(st.session_state.displayed_df['tmdbId'])]
 
 MAX_COLUMNS = 5
 MAX_ROWS = 4
@@ -394,7 +400,7 @@ html_posters_to_display += "</table>"
 #                      caption=f"{titles[i * MAX_COLUMNS + j]}")
 
 
-def get_recommendations(movie_id, knn=5):
+def get_recommendations(movie_id, min_similars=5, knn=5):
     idx = df.loc[df['tmdbId'] == movie_id, "movieId"].values[0]
     mapped_idx = rec_movie_mappings[idx]
     sims = movie_recs.getrow(mapped_idx).todense()
@@ -404,6 +410,9 @@ def get_recommendations(movie_id, knn=5):
     # TODO: PARALLELIZE THIS MAYBE
     for idx in sims:
         sim_idxs.append(reverse_rec_movie_mappings.get(idx))
+    if len(sim_idxs) < min_similars:
+        knn += 1
+        get_recommendations(movie_id, knn)
     return df.loc[df['movieId'].isin(sim_idxs), "tmdbId"]
 
 
@@ -437,11 +446,16 @@ def display_movie(movie_id):
         st.markdown(f"""**More Info:** [IMDB Page]({imdb_page}){
                     f', [Movie Homepage]({homepage})' if not isinstance(homepage, float) else ''}""")
 
-    st.write("**Movie Recomendations:**")
+    st.write("**Movie Recommendations:**")
     movie_rec_ids = get_recommendations(movie_id)
     recs = st.columns(len(movie_rec_ids))
     for i, id in enumerate(movie_rec_ids):
-        recs[i].image(f"assets/posters/{id}_w500.jpg")
+        try:
+            recs[i].image(f"assets/posters/{id}_w500.jpg")
+        except:
+            recs[i].image(f"assets/posters/null_w500.jpg")
+        recs[i].markdown(
+            f"<p style='font-size:0.85em;text-align:left'>{df.loc[df['tmdbId'] == id, 'original_title'].values[0]}</p>", unsafe_allow_html=True)
 
 
 clicked = click_detector(html_posters_to_display)
