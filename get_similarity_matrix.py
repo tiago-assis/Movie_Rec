@@ -40,7 +40,11 @@ def get_matrix_data():
     done = False
 
     t1 = time.time()
-    while (not done) or (t2-t1 <= 60):
+    t2 = t1
+    while not done:
+        if t2 - t1 > 60:
+            print("File download timed out (60s).")
+            return
         status, done = downloader.next_chunk()
         t2 = time.time()
 
